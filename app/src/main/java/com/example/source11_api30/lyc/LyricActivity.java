@@ -18,18 +18,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class LyricActivity extends AppCompatActivity {
 
-    LyricView lyricView;
-    SeekBar sb;
-    private List<Lyric> radioCaptions;
-    private MediaPlayer mediaPlayer;
-    private Handler handler;
+    private LyricParentView mLyricParentView;
+    private SeekBar mSeekBar;
+    private List<Lyric> mLycData;
+    private MediaPlayer mMediaPlayer;
+    private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lyc);
 
-        handler = new Handler(getMainLooper());
+        mHandler = new Handler(getMainLooper());
         initView();
         initLyc();
         initMediaPlayer();
@@ -38,33 +38,31 @@ public class LyricActivity extends AppCompatActivity {
     private void initLyc() {
         Type type = new TypeToken<List<Lyric>>() {
         }.getType();
-        radioCaptions = new Gson().fromJson(LyricData.lyc, type);
-        lyricView.setData(radioCaptions);
+        mLycData = new Gson().fromJson(LyricData.lyc, type);
+        mLyricParentView.setData(mLycData);
     }
 
     private void initView() {
-        lyricView = findViewById(R.id.lyc_view);
+        mLyricParentView = findViewById(R.id.lyc_parent_view);
         findViewById(R.id.bt_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mediaPlayer.start();
+                mMediaPlayer.start();
                 updateTime();
             }
         });
         findViewById(R.id.bt_pause).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mediaPlayer.pause();
-                handler.removeCallbacks(runnable);
+                mMediaPlayer.pause();
+                mHandler.removeCallbacks(runnable);
             }
         });
-        sb = findViewById(R.id.sb);
-        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        mSeekBar = findViewById(R.id.sb);
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
 
-                }
             }
 
             @Override
@@ -74,37 +72,48 @@ public class LyricActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mediaPlayer.seekTo(seekBar.getProgress());
+                if (mMediaPlayer != null) {
+                    mMediaPlayer.seekTo(seekBar.getProgress());
+                }
+            }
+        });
+        mLyricParentView.setOnSeekToGuideLineListener(new LyricParentView.OnSeekToGuideLineListener() {
+            @Override
+            public void seekToGuideLine(int startTime) {
+                if (mMediaPlayer != null) {
+                    mMediaPlayer.seekTo(startTime);
+                }
             }
         });
     }
 
     private void initMediaPlayer() {
         try {
-            mediaPlayer = MediaPlayer.create(this, R.raw.aaa);
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            mMediaPlayer = MediaPlayer.create(this, R.raw.aaa);
+            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     L.i("onPrepared");
-                    sb.setMax(mediaPlayer.getDuration());
-                    sb.setProgress(mediaPlayer.getCurrentPosition());
+                    mSeekBar.setMax(mMediaPlayer.getDuration());
+                    mSeekBar.setProgress(mMediaPlayer.getCurrentPosition());
                 }
             });
-            mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
                 @Override
                 public boolean onError(MediaPlayer mp, int what, int extra) {
                     L.i("error what:" + what + ",extra:" + extra);
                     return false;
                 }
             });
-            mediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
+            mMediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
                 @Override
                 public void onSeekComplete(MediaPlayer mp) {
-                    L.i("onSeekComplete "+mediaPlayer.getCurrentPosition());
+                    L.i("onSeekComplete " + mMediaPlayer.getCurrentPosition());
+                    mLyricParentView.updateTime(mMediaPlayer.getCurrentPosition());
                 }
             });
 
-            mediaPlayer.prepareAsync();
+            mMediaPlayer.prepareAsync();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -112,17 +121,22 @@ public class LyricActivity extends AppCompatActivity {
     }
 
     private void updateTime() {
-        handler.postDelayed(runnable, 50);
+        mHandler.postDelayed(runnable, 50);
     }
 
     private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            int currentPosition = mediaPlayer.getCurrentPosition();
-            sb.setProgress(currentPosition);
-            lyricView.updateTime(currentPosition);
+            int currentPosition = mMediaPlayer.getCurrentPosition();
+            mSeekBar.setProgress(currentPosition);
+            mLyricParentView.updateTime(currentPosition);
             updateTime();
         }
     };
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLyricParentView.release();
+    }
 }

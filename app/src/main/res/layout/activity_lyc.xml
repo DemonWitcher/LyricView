@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.example.source11_api30.lyc.LyricView
-        android:id="@+id/lyc_view"
+    <com.example.source11_api30.lyc.LyricParentView
+        android:id="@+id/lyc_parent_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
