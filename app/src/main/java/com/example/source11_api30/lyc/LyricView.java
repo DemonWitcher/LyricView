@@ -24,6 +24,8 @@ import androidx.annotation.Nullable;
 
 public class LyricView extends View {
 
+    //惯性滑动的速度
+    public static final int INERTIA_VELOCITY = 1000;
     //第一行歌词上下居中往上偏的距离
     public static final int FIRST_LINE_OFFSET = 60;
     //字体大小
@@ -136,6 +138,7 @@ public class LyricView extends View {
         if (mOverScroller.computeScrollOffset()) {
             scrollTo(0, mOverScroller.getCurrY());
             if (mInUserTouch) {
+                removeCallbacks(mScrollToGuideLineRunnable);
                 checkGuideLine();
                 if (mOverScroller.isFinished()) {
                     scrollToGuideLine();
@@ -194,6 +197,7 @@ public class LyricView extends View {
         int action = event.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                removeCallbacks(mScrollToGuideLineRunnable);
                 mInUserTouch = true;
                 mGuideLine = mCurrentLine;
                 mDownY = event.getY();
@@ -202,7 +206,6 @@ public class LyricView extends View {
             }
             break;
             case MotionEvent.ACTION_MOVE: {
-                //加边界检测  加距离转换成行数
                 int moveOffset = (int) (event.getY() - mDownY);
                 int scrollToY = mDownScrollY - moveOffset;
                 scrollToY = Math.max(0, scrollToY);
@@ -220,24 +223,26 @@ public class LyricView extends View {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
                 //先处理惯性
-                mVelocityTracker.computeCurrentVelocity(1000);
+                mVelocityTracker.computeCurrentVelocity(INERTIA_VELOCITY);
                 float yVelocity = mVelocityTracker.getYVelocity();
-                L.i("yVelocity:" + yVelocity);
                 mOverScroller.fling(0, getScrollY(), 0, -(int) yVelocity, 0, 0, 0, mLycHeight);
                 mVelocityTracker.clear();
-                //这里改成滚动停止后的延迟300毫秒后处理这个
-//                scrollToGuideLine();
+                postDelayed(mScrollToGuideLineRunnable, 50);
             }
             break;
             default:
         }
     }
 
+    private final Runnable mScrollToGuideLineRunnable = new Runnable() {
+        @Override
+        public void run() {
+            scrollToGuideLine();
+        }
+    };
+
     private void scrollToGuideLine() {
         //松手后滚动到指导线行数的中间
-        if (!mOverScroller.isFinished()) {
-            mOverScroller.abortAnimation();
-        }
         int dy = getLineOffset(mGuideLine);
         if (dy == 0) {
             return;
