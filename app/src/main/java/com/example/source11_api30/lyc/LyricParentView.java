@@ -19,7 +19,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 public class LyricParentView extends ConstraintLayout {
 
-    //抬手后5秒延迟去隐藏seek指导线UI
+    //抬手后延迟去隐藏seek指导线UI
     public static final int UP_HIDE_DELAY = 3000;
 
     private ImageView mIvPlay;
@@ -114,11 +114,11 @@ public class LyricParentView extends ConstraintLayout {
         mLyricView.whenGuideLineGone();
     }
 
-    public void pause(){
+    public void pause() {
         mLyricView.pause();
     }
 
-    public void start(){
+    public void start() {
         mLyricView.start();
         hideGuideLine();
     }
@@ -131,7 +131,7 @@ public class LyricParentView extends ConstraintLayout {
         mLyricView.updateTime(currentPosition);
     }
 
-    public void release(){
+    public void release() {
         removeCallbacks(mHideGuideLineRunnable);
         mLyricView.release();
     }

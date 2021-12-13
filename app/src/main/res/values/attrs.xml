@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--歌词-->
+    <declare-styleable name="LyricView">
+        <!--松手后滚动到指导线位置的时间-->
+        <attr name="up_touch_guide_change_line_time" format="integer" />
+        <!--切换下一句的过渡时间-->
+        <attr name="auto_change_line_time" format="integer" />
+        <!--字体大小-->
+        <attr name="lyc_size" format="dimension" />
+        <!--默认句颜色-->
+        <attr name="normal_color" format="reference|color" />
+        <!--当前句颜色-->
+        <attr name="current_color" format="reference|color" />
+        <!--指导线指句行颜色-->
+        <attr name="guide_color" format="reference|color" />
+        <!--句间距-->
+        <attr name="lyc_space" format="dimension" />
+        <!--第一行歌词上下居中往上偏的距离-->
+        <attr name="first_line_offset" format="dimension" />
+        <!--歌词绘制时左右padding 左右各留出这个距离的空白-->
+        <attr name="padding_left_right" format="dimension" />
+    </declare-styleable>
+
+</resources>

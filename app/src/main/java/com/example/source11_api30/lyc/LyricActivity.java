@@ -84,7 +84,7 @@ public class LyricActivity extends AppCompatActivity {
             public void seekToGuideLine(int startTime) {
                 if (mMediaPlayer != null) {
                     mMediaPlayer.seekTo(startTime);
-                    if(!mMediaPlayer.isPlaying()){
+                    if (!mMediaPlayer.isPlaying()) {
                         mMediaPlayer.start();
                         updateTime();
                     }

@@ -1,6 +1,7 @@
 package com.example.source11_api30.lyc;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -14,7 +15,7 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.widget.OverScroller;
 
-import com.example.source11_api30.L;
+import com.example.source11_api30.R;
 
 import java.util.List;
 
@@ -23,17 +24,23 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class LyricView extends View {
+    //默认句颜色
+    public static final int NORMAL_COLOR = Color.GRAY;
+    //当前句颜色
+    public static final int CURRENT_COLOR = Color.WHITE;
+    //指导线指句行颜色
+    public static final int GUIDE_COLOR = Color.parseColor("#653EAB");
 
     //惯性滑动的速度
     public static final int INERTIA_VELOCITY = 500;
     //第一行歌词上下居中往上偏的距离
-    public static final int FIRST_LINE_OFFSET = 60;
+    public static final int FIRST_LINE_OFFSET = 20;
     //字体大小
-    public static final int TV_SIZE = 45;
+    public static final int TV_SIZE = 15;
     //句间距
-    public static final int LYC_SPACE = 45;
+    public static final int LYC_SPACE = 15;
     //歌词绘制时左右padding 左右各留出这个距离的空白
-    public static final int PADDING_LEFT_RIGHT = 30;
+    public static final int PADDING_LEFT_RIGHT = 10;
     //切换下一句的过渡时间
     public static final int AUTO_CHANGE_LINE_TIME = 1500;
     //松手后滚动到指导线位置的时间
@@ -47,10 +54,20 @@ public class LyricView extends View {
     private VelocityTracker mVelocityTracker;
     private TextPaint mPaintNormal;
 
+    //松手后滚动到指导线位置的时间
+    private int mUpTouchGuideChangeLineTime;
+    //切换下一句的过渡时间
+    private int mAutoChangeLineTime;
+    //字体大小
     private int mTvSize;
-
+    //默认句颜色，当前句颜色，指导线指句行颜色
     private int mNormalColor, mCurrentColor, mGuideColor;
-
+    //句间距
+    private int mLycSpace;
+    //歌词绘制时左右padding 左右各留出这个距离的空白
+    private int mPaddingLeftRight;
+    //第一行歌词上下居中往上偏的距离
+    private int mFirstLineOffset;
     //当前歌词行数
     private int mCurrentLine;
     //指导线的当前行数
@@ -66,31 +83,38 @@ public class LyricView extends View {
 
     public LyricView(Context context) {
         super(context);
-        init();
     }
 
     public LyricView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context, attrs);
     }
 
     public LyricView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context, attrs);
     }
 
-    private void init() {
-        mTvSize = TV_SIZE;
+    private void init(Context context, AttributeSet attrs) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.LyricView);
+        mUpTouchGuideChangeLineTime = typedArray.getInteger(R.styleable.LyricView_up_touch_guide_change_line_time, UP_TOUCH_GUIDE_CHANGE_LINE_TIME);
+        mAutoChangeLineTime = typedArray.getInteger(R.styleable.LyricView_auto_change_line_time, AUTO_CHANGE_LINE_TIME);
+        mTvSize = typedArray.getDimensionPixelSize(R.styleable.LyricView_lyc_size, dip2px(getContext(), TV_SIZE));
+        mLycSpace = typedArray.getDimensionPixelSize(R.styleable.LyricView_lyc_space, dip2px(getContext(), LYC_SPACE));
+        mPaddingLeftRight = typedArray.getDimensionPixelSize(R.styleable.LyricView_first_line_offset, dip2px(getContext(), FIRST_LINE_OFFSET));
+        mFirstLineOffset = typedArray.getDimensionPixelSize(R.styleable.LyricView_padding_left_right, dip2px(getContext(), PADDING_LEFT_RIGHT));
+        mNormalColor = typedArray.getColor(R.styleable.LyricView_normal_color, NORMAL_COLOR);
+        mCurrentColor = typedArray.getColor(R.styleable.LyricView_current_color, CURRENT_COLOR);
+        mGuideColor = typedArray.getColor(R.styleable.LyricView_guide_color, GUIDE_COLOR);
+        typedArray.recycle();
+
         mOverScroller = new OverScroller(getContext());
         mVelocityTracker = VelocityTracker.obtain();
 
         mPaintNormal = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        mPaintNormal.setColor(Color.GRAY);
+        mPaintNormal.setColor(mNormalColor);
         mPaintNormal.setTextSize(mTvSize);
 
-        mNormalColor = Color.GRAY;
-        mCurrentColor = Color.WHITE;
-        mGuideColor = Color.parseColor("#653EAB");
     }
 
     @Override
@@ -99,7 +123,7 @@ public class LyricView extends View {
         if (mLyricList == null || mLyricList.size() == 0) {
             return;
         }
-        canvas.translate(PADDING_LEFT_RIGHT, getHeight() / 2f - FIRST_LINE_OFFSET);
+        canvas.translate(mPaddingLeftRight, getHeight() / 2f - mFirstLineOffset);
 
         int size = mLyricList.size();
         StaticLayout staticLayout;
@@ -113,7 +137,7 @@ public class LyricView extends View {
             }
             staticLayout = getStaticLayout(i);
             staticLayout.draw(canvas);
-            canvas.translate(0, staticLayout.getHeight() + LYC_SPACE);
+            canvas.translate(0, staticLayout.getHeight() + mLycSpace);
         }
     }
 
@@ -122,7 +146,7 @@ public class LyricView extends View {
         if (staticLayout == null) {
             Lyric lyric = mLyricList.get(lyricPosition);
             String srtLyc = lyric.getDesc();
-            int width = getWidth() - PADDING_LEFT_RIGHT - PADDING_LEFT_RIGHT;
+            int width = getWidth() - mPaddingLeftRight - mPaddingLeftRight;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 staticLayout = StaticLayout.Builder.obtain(srtLyc, 0, srtLyc.length(), mPaintNormal, width)
                         .setAlignment(Layout.Alignment.ALIGN_CENTER).build();
@@ -175,7 +199,7 @@ public class LyricView extends View {
     private int getLineOffset(int targetLine) {
         int offset = 0;
         for (int i = 0; i < targetLine; ++i) {
-            offset = offset + mStaticLayoutMap.get(i).getHeight() + LYC_SPACE;
+            offset = offset + mStaticLayoutMap.get(i).getHeight() + mLycSpace;
         }
         return offset - getScrollY();
     }
@@ -192,7 +216,7 @@ public class LyricView extends View {
             }
             int currentScrollY = getScrollY();
 //            L.i("currentScrollY:" + currentScrollY + ",dy:" + dy);
-            mOverScroller.startScroll(0, currentScrollY, 0, dy, AUTO_CHANGE_LINE_TIME);
+            mOverScroller.startScroll(0, currentScrollY, 0, dy, mAutoChangeLineTime);
             invalidate();
         }
     };
@@ -263,7 +287,7 @@ public class LyricView extends View {
         }
         int currentScrollY = getScrollY();
 //        L.i("currentScrollY:" + currentScrollY + ",dy:" + dy);
-        mOverScroller.startScroll(0, currentScrollY, 0, dy, UP_TOUCH_GUIDE_CHANGE_LINE_TIME);
+        mOverScroller.startScroll(0, currentScrollY, 0, dy, mUpTouchGuideChangeLineTime);
         invalidate();
     }
 
@@ -281,7 +305,7 @@ public class LyricView extends View {
         for (int i = 0; i < size; ++i) {
             offset = offset + mStaticLayoutMap.get(i).getHeight();
             if (i != size - 1) {
-                offset = offset + LYC_SPACE;
+                offset = offset + mLycSpace;
             }
         }
         return offset;
@@ -300,7 +324,7 @@ public class LyricView extends View {
                 notifyGuideLineTime();
                 break;
             }
-            offset = offset + LYC_SPACE;
+            offset = offset + mLycSpace;
         }
     }
 
@@ -368,4 +392,83 @@ public class LyricView extends View {
         void onGuideLineChange(Lyric lyric);
     }
 
+    public int getUpTouchGuideChangeLineTime() {
+        return mUpTouchGuideChangeLineTime;
+    }
+
+    public void setUpTouchGuideChangeLineTime(int upTouchGuideChangeLineTime) {
+        this.mUpTouchGuideChangeLineTime = upTouchGuideChangeLineTime;
+    }
+
+    public int getAutoChangeLineTime() {
+        return mAutoChangeLineTime;
+    }
+
+    public void setAutoChangeLineTime(int autoChangeLineTime) {
+        this.mAutoChangeLineTime = autoChangeLineTime;
+    }
+
+    public int getTvSize() {
+        return mTvSize;
+    }
+
+    public void setTvSize(int tvSize) {
+        this.mTvSize = tvSize;
+    }
+
+    public int getNormalColor() {
+        return mNormalColor;
+    }
+
+    public void setNormalColor(int normalColor) {
+        this.mNormalColor = normalColor;
+    }
+
+    public int getCurrentColor() {
+        return mCurrentColor;
+    }
+
+    public void setCurrentColor(int currentColor) {
+        this.mCurrentColor = currentColor;
+    }
+
+    public int getGuideColor() {
+        return mGuideColor;
+    }
+
+    public void setGuideColor(int guideColor) {
+        this.mGuideColor = guideColor;
+    }
+
+    public int getLycSpace() {
+        return mLycSpace;
+    }
+
+    public void setLycSpace(int lycSpace) {
+        this.mLycSpace = lycSpace;
+    }
+
+    public int getPaddingLeftRight() {
+        return mPaddingLeftRight;
+    }
+
+    public void setPaddingLeftRight(int paddingLeftRight) {
+        this.mPaddingLeftRight = paddingLeftRight;
+    }
+
+    public int getFirstLineOffset() {
+        return mFirstLineOffset;
+    }
+
+    public void setFirstLineOffset(int firstLineOffset) {
+        this.mFirstLineOffset = firstLineOffset;
+    }
+
+    public static int dip2px(Context context, float dipValue) {
+        if (null == context) {
+            return 0;
+        }
+        final float scaleValue = context.getResources().getDisplayMetrics().density;
+        return (int) (dipValue * scaleValue + 0.5f);
+    }
 }
