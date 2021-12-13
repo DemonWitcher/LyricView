@@ -101,8 +101,8 @@ public class LyricView extends View {
         mAutoChangeLineTime = typedArray.getInteger(R.styleable.LyricView_auto_change_line_time, AUTO_CHANGE_LINE_TIME);
         mTvSize = typedArray.getDimensionPixelSize(R.styleable.LyricView_lyc_size, dip2px(getContext(), TV_SIZE));
         mLycSpace = typedArray.getDimensionPixelSize(R.styleable.LyricView_lyc_space, dip2px(getContext(), LYC_SPACE));
-        mPaddingLeftRight = typedArray.getDimensionPixelSize(R.styleable.LyricView_first_line_offset, dip2px(getContext(), FIRST_LINE_OFFSET));
-        mFirstLineOffset = typedArray.getDimensionPixelSize(R.styleable.LyricView_padding_left_right, dip2px(getContext(), PADDING_LEFT_RIGHT));
+        mFirstLineOffset = typedArray.getDimensionPixelSize(R.styleable.LyricView_first_line_offset, dip2px(getContext(), FIRST_LINE_OFFSET));
+        mPaddingLeftRight = typedArray.getDimensionPixelSize(R.styleable.LyricView_padding_left_right, dip2px(getContext(), PADDING_LEFT_RIGHT));
         mNormalColor = typedArray.getColor(R.styleable.LyricView_normal_color, NORMAL_COLOR);
         mCurrentColor = typedArray.getColor(R.styleable.LyricView_current_color, CURRENT_COLOR);
         mGuideColor = typedArray.getColor(R.styleable.LyricView_guide_color, GUIDE_COLOR);
