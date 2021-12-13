@@ -48,6 +48,7 @@ public class LyricActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mMediaPlayer.start();
+                mLyricParentView.start();
                 updateTime();
             }
         });
@@ -55,6 +56,7 @@ public class LyricActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mMediaPlayer.pause();
+                mLyricParentView.pause();
                 mHandler.removeCallbacks(runnable);
             }
         });
@@ -82,6 +84,10 @@ public class LyricActivity extends AppCompatActivity {
             public void seekToGuideLine(int startTime) {
                 if (mMediaPlayer != null) {
                     mMediaPlayer.seekTo(startTime);
+                    if(!mMediaPlayer.isPlaying()){
+                        mMediaPlayer.start();
+                        updateTime();
+                    }
                 }
             }
         });

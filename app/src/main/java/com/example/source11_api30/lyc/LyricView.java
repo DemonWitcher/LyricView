@@ -25,7 +25,7 @@ import androidx.annotation.Nullable;
 public class LyricView extends View {
 
     //惯性滑动的速度
-    public static final int INERTIA_VELOCITY = 1000;
+    public static final int INERTIA_VELOCITY = 500;
     //第一行歌词上下居中往上偏的距离
     public static final int FIRST_LINE_OFFSET = 60;
     //字体大小
@@ -54,11 +54,13 @@ public class LyricView extends View {
     //当前歌词行数
     private int mCurrentLine;
     //指导线的当前行数
-    private int mGuideLine;
+    private int mGuideLine = -1;
     //用户是否触控中
     private boolean mInUserTouch;
     //缓存的歌词总高度
     private int mLycHeight;
+    //是否暂停中
+    private boolean mIsPause = true;
 
     private OnGuideLineChangeListener mOnGuideLineChangeListener;
 
@@ -102,7 +104,7 @@ public class LyricView extends View {
         int size = mLyricList.size();
         StaticLayout staticLayout;
         for (int i = 0; i < size; ++i) {
-            if (i == mGuideLine && mInUserTouch) {
+            if (i == mGuideLine && (mInUserTouch || mIsPause)) {
                 mPaintNormal.setColor(mGuideColor);
             } else if (i == mCurrentLine) {
                 mPaintNormal.setColor(mCurrentColor);
@@ -152,9 +154,10 @@ public class LyricView extends View {
         removeCallbacks(mChangeLineRunnable);
         removeCallbacks(mScrollToGuideLineRunnable);
         mCurrentLine = 0;
-        mGuideLine = 0;
+        mGuideLine = -1;
         mLycHeight = 0;
         mStaticLayoutMap.clear();
+        mIsPause = true;
     }
 
     private int findLineByTime(int currentPosition) {
@@ -233,7 +236,9 @@ public class LyricView extends View {
                 //先处理惯性
                 mVelocityTracker.computeCurrentVelocity(INERTIA_VELOCITY);
                 float yVelocity = mVelocityTracker.getYVelocity();
+//                L.i("yVelocity:" + yVelocity);
                 mOverScroller.fling(0, getScrollY(), 0, -(int) yVelocity, 0, 0, 0, mLycHeight);
+                invalidate();
                 mVelocityTracker.clear();
                 postDelayed(mScrollToGuideLineRunnable, 50);
             }
@@ -250,13 +255,14 @@ public class LyricView extends View {
     };
 
     private void scrollToGuideLine() {
+//        L.i("scrollToGuideLine");
         //松手后滚动到指导线行数的中间
         int dy = getLineOffset(mGuideLine);
         if (dy == 0) {
             return;
         }
         int currentScrollY = getScrollY();
-        L.i("currentScrollY:" + currentScrollY + ",dy:" + dy);
+//        L.i("currentScrollY:" + currentScrollY + ",dy:" + dy);
         mOverScroller.startScroll(0, currentScrollY, 0, dy, UP_TOUCH_GUIDE_CHANGE_LINE_TIME);
         invalidate();
     }
@@ -301,8 +307,11 @@ public class LyricView extends View {
     public void whenGuideLineGone() {
         mInUserTouch = false;
         invalidate();
-        //指导线隐藏后 需要更新一下位置
-        post(mChangeLineRunnable);
+        if (!mIsPause) {
+            //播放中 指导线隐藏后 需要更新一下位置
+            mGuideLine = -1;
+            post(mChangeLineRunnable);
+        }
     }
 
     public void setData(@NonNull List<Lyric> lyricList) {
@@ -341,6 +350,14 @@ public class LyricView extends View {
             return (int) lyric.getStartTime();
         }
         return 0;
+    }
+
+    public void pause() {
+        mIsPause = true;
+    }
+
+    public void start() {
+        mIsPause = false;
     }
 
     public void setOnGuideLineChangeListener(OnGuideLineChangeListener onGuideLineChangeListener) {

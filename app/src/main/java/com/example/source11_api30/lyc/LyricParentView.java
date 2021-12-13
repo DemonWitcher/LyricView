@@ -64,10 +64,11 @@ public class LyricParentView extends ConstraintLayout {
             @Override
             public void onClick(View v) {
                 removeCallbacks(mHideGuideLineRunnable);
-                hideGuideLine();
                 if (mOnSeekToGuideLineListener != null) {
                     mOnSeekToGuideLineListener.seekToGuideLine(mLyricView.getGuideLineStartTime());
                 }
+                mLyricView.start();
+                hideGuideLine();
             }
         });
     }
@@ -111,6 +112,15 @@ public class LyricParentView extends ConstraintLayout {
         mViewLine.setVisibility(View.GONE);
         mTvGuideTime.setVisibility(View.GONE);
         mLyricView.whenGuideLineGone();
+    }
+
+    public void pause(){
+        mLyricView.pause();
+    }
+
+    public void start(){
+        mLyricView.start();
+        hideGuideLine();
     }
 
     public void setData(@NonNull List<Lyric> lyricList) {
