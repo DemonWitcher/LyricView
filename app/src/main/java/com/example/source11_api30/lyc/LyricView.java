@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class LyricView extends View {
+
     //默认句颜色
     public static final int NORMAL_COLOR = Color.GRAY;
     //当前句颜色
@@ -31,7 +32,7 @@ public class LyricView extends View {
     //指导线指句行颜色
     public static final int GUIDE_COLOR = Color.parseColor("#653EAB");
 
-    //惯性滑动的速度
+    //惯性滑动的力度
     public static final int INERTIA_VELOCITY = 500;
     //第一行歌词上下居中往上偏的距离
     public static final int FIRST_LINE_OFFSET = 20;
