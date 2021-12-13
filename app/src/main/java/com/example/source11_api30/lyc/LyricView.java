@@ -149,7 +149,12 @@ public class LyricView extends View {
     }
 
     private void reset() {
+        removeCallbacks(mChangeLineRunnable);
+        removeCallbacks(mScrollToGuideLineRunnable);
         mCurrentLine = 0;
+        mGuideLine = 0;
+        mLycHeight = 0;
+        mStaticLayoutMap.clear();
     }
 
     private int findLineByTime(int currentPosition) {
@@ -183,7 +188,7 @@ public class LyricView extends View {
                 return;
             }
             int currentScrollY = getScrollY();
-            L.i("currentScrollY:" + currentScrollY + ",dy:" + dy);
+//            L.i("currentScrollY:" + currentScrollY + ",dy:" + dy);
             mOverScroller.startScroll(0, currentScrollY, 0, dy, AUTO_CHANGE_LINE_TIME);
             invalidate();
         }
@@ -197,12 +202,15 @@ public class LyricView extends View {
         int action = event.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                removeCallbacks(mScrollToGuideLineRunnable);
                 mInUserTouch = true;
-                mGuideLine = mCurrentLine;
                 mDownY = event.getY();
                 mDownScrollY = getScrollY();
-                notifyGuideLineTime();
+                if (!mOverScroller.isFinished()) {
+                    mOverScroller.abortAnimation();
+                }
+                removeCallbacks(mScrollToGuideLineRunnable);
+                removeCallbacks(mChangeLineRunnable);
+                checkGuideLine();
             }
             break;
             case MotionEvent.ACTION_MOVE: {
@@ -280,7 +288,6 @@ public class LyricView extends View {
         for (int i = 0; i < size; ++i) {
             offset = offset + mStaticLayoutMap.get(i).getHeight();
             if (offset >= scrollY) {
-//                L.i("就这行 " + i + ",offset:" + offset + ",scrollY:" + scrollY);
                 mGuideLine = i;
                 invalidate();
                 //指导线更新后 更新上层的时间
@@ -308,6 +315,7 @@ public class LyricView extends View {
             mOverScroller.abortAnimation();
         }
         removeCallbacks(mChangeLineRunnable);
+        removeCallbacks(mScrollToGuideLineRunnable);
     }
 
     public void updateTime(@IntRange(from = 0) int currentPosition) {
