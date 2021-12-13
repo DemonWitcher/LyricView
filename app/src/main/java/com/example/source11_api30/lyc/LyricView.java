@@ -300,6 +300,7 @@ public class LyricView extends View {
 
     public void whenGuideLineGone() {
         mInUserTouch = false;
+        invalidate();
         //指导线隐藏后 需要更新一下位置
         post(mChangeLineRunnable);
     }
