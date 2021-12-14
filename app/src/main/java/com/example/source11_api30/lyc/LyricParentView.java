@@ -75,6 +75,9 @@ public class LyricParentView extends ConstraintLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if(mLyricView.isLycEmpty()){
+            return false;
+        }
         mLyricView.onParentViewTouch(event);
         int action = event.getAction();
         switch (action) {

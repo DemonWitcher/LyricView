@@ -121,7 +121,7 @@ public class LyricView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (mLyricList == null || mLyricList.size() == 0) {
+        if (isLycEmpty()) {
             return;
         }
         canvas.translate(mPaddingLeftRight, getHeight() / 2f - mFirstLineOffset);
@@ -200,7 +200,7 @@ public class LyricView extends View {
     private int getLineOffset(int targetLine) {
         int offset = 0;
         for (int i = 0; i < targetLine; ++i) {
-            offset = offset + mStaticLayoutMap.get(i).getHeight() + mLycSpace;
+            offset = offset + getStaticLayout(i).getHeight() + mLycSpace;
         }
         return offset - getScrollY();
     }
@@ -304,7 +304,7 @@ public class LyricView extends View {
         int size = mLyricList.size();
         int offset = 0;
         for (int i = 0; i < size; ++i) {
-            offset = offset + mStaticLayoutMap.get(i).getHeight();
+            offset = offset + getStaticLayout(i).getHeight();
             if (i != size - 1) {
                 offset = offset + mLycSpace;
             }
@@ -313,11 +313,14 @@ public class LyricView extends View {
     }
 
     private void checkGuideLine() {
+        if(isLycEmpty()){
+            return;
+        }
         int scrollY = getScrollY();
         int size = mLyricList.size();
         int offset = 0;
         for (int i = 0; i < size; ++i) {
-            offset = offset + mStaticLayoutMap.get(i).getHeight();
+            offset = offset + getStaticLayout(i).getHeight();
             if (offset >= scrollY) {
                 mGuideLine = i;
                 invalidate();
@@ -327,6 +330,10 @@ public class LyricView extends View {
             }
             offset = offset + mLycSpace;
         }
+    }
+
+    public boolean isLycEmpty() {
+        return mLyricList == null || mLyricList.size() == 0;
     }
 
     public void whenGuideLineGone() {
@@ -354,7 +361,7 @@ public class LyricView extends View {
     }
 
     public void updateTime(@IntRange(from = 0) int currentPosition) {
-        if (mLyricList == null || mLyricList.size() == 0) {
+        if (isLycEmpty()) {
             return;
         }
         int currentLine = findLineByTime(currentPosition);
