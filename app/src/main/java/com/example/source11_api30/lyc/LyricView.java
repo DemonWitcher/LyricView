@@ -226,24 +226,28 @@ public class LyricView extends View {
     private int mDownScrollY;
 
     public void onParentViewTouch(MotionEvent event) {
+        if(!mInUserTouch){
+            return;
+        }
         mVelocityTracker.addMovement(event);
         int action = event.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
-                mInUserTouch = true;
-                mDownY = event.getY();
-                mDownScrollY = getScrollY();
-                if (!mOverScroller.isFinished()) {
-                    mOverScroller.abortAnimation();
-                }
-                removeCallbacks(mScrollToGuideLineRunnable);
-                removeCallbacks(mChangeLineRunnable);
-                checkGuideLine();
+//                mInUserTouch = true;
+//                mDownY = event.getY();
+//                mDownScrollY = getScrollY();
+//                if (!mOverScroller.isFinished()) {
+//                    mOverScroller.abortAnimation();
+//                }
+//                removeCallbacks(mScrollToGuideLineRunnable);
+//                removeCallbacks(mChangeLineRunnable);
+//                checkGuideLine();
             }
             break;
             case MotionEvent.ACTION_MOVE: {
                 int moveOffset = (int) (event.getY() - mDownY);
                 int scrollToY = mDownScrollY - moveOffset;
+//                Log.i("witcher","move mDownScrollY："+mDownScrollY+",mDownY:"+mDownY);
                 scrollToY = Math.max(0, scrollToY);
                 if (mLycHeight == 0) {
                     mLycHeight = getLycHeight();
@@ -271,6 +275,31 @@ public class LyricView extends View {
             default:
         }
     }
+
+    void whenGuideLineShow(MotionEvent event){
+//        Log.i("witcher","showGuideLine mDownScrollY:"+getScrollY());
+        mInUserTouch = true;
+        mDownY = event.getY();
+        mDownScrollY = getScrollY();
+        if (!mOverScroller.isFinished()) {
+            mOverScroller.abortAnimation();
+        }
+        removeCallbacks(mScrollToGuideLineRunnable);
+        removeCallbacks(mChangeLineRunnable);
+        checkGuideLine();
+    }
+
+    void whenGuideLineGone() {
+        mInUserTouch = false;
+//        Log.i("witcher","whenGuideLineGone mIsPause:"+mIsPause);
+        if (!mIsPause) {
+            //播放中 指导线隐藏后 需要更新一下位置
+            mGuideLine = -1;
+            post(mChangeLineRunnable);
+        }
+        invalidate();
+    }
+
 
     private final Runnable mScrollToGuideLineRunnable = new Runnable() {
         @Override
@@ -334,16 +363,6 @@ public class LyricView extends View {
 
     public boolean isLycEmpty() {
         return mLyricList == null || mLyricList.size() == 0;
-    }
-
-    public void whenGuideLineGone() {
-        mInUserTouch = false;
-        invalidate();
-        if (!mIsPause) {
-            //播放中 指导线隐藏后 需要更新一下位置
-            mGuideLine = -1;
-            post(mChangeLineRunnable);
-        }
     }
 
     public void setData(@NonNull List<Lyric> lyricList) {

@@ -72,28 +72,55 @@ public class LyricParentView extends ConstraintLayout {
             }
         });
     }
+    private float mDownY, mDownX;
+    private boolean mHaveShowGuideLineCurrentTouch;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(mLyricView.isLycEmpty()){
+        if (mLyricView.isLycEmpty()) {
             return false;
         }
-        mLyricView.onParentViewTouch(event);
+//        mLyricView.onParentViewTouch(event);
         int action = event.getAction();
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
+                requestDisallowInterceptTouchEvent(true);
+                mDownY = event.getY();
+                mDownX = event.getX();
                 removeCallbacks(mHideGuideLineRunnable);
-                showGuideLine();
+            }
+            break;
+            case MotionEvent.ACTION_MOVE: {
+                float distanceY = Math.abs(event.getY() - mDownY);
+                float distanceX = Math.abs(event.getX() - mDownX);
+                if (distanceY > distanceX) {
+                    if(distanceY > 60 && !mHaveShowGuideLineCurrentTouch){
+                        removeCallbacks(mHideGuideLineRunnable);
+                        mHaveShowGuideLineCurrentTouch = true;
+                        showGuideLine(event);
+                    }
+                    if(mHaveShowGuideLineCurrentTouch){
+                        mLyricView.onParentViewTouch(event);
+                    }
+                    requestDisallowInterceptTouchEvent(true);
+                } else {
+                    if(distanceX == 0 &&distanceY==0){
+                        requestDisallowInterceptTouchEvent(true);
+                    }else{
+                        requestDisallowInterceptTouchEvent(false);
+                    }
+                }
             }
             break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
+                mHaveShowGuideLineCurrentTouch = false;
                 postDelayed(mHideGuideLineRunnable, UP_HIDE_DELAY);
+                mLyricView.onParentViewTouch(event);
             }
             break;
             default:
         }
-
         return true;
     }
 
@@ -104,12 +131,12 @@ public class LyricParentView extends ConstraintLayout {
         }
     };
 
-    private void showGuideLine() {
+    private void showGuideLine(MotionEvent event) {
         mIvPlay.setVisibility(View.VISIBLE);
         mViewLine.setVisibility(View.VISIBLE);
         mTvGuideTime.setVisibility(View.VISIBLE);
+        mLyricView.whenGuideLineShow(event);
     }
-
     private void hideGuideLine() {
         mIvPlay.setVisibility(View.GONE);
         mViewLine.setVisibility(View.GONE);
